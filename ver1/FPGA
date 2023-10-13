@@ -11,7 +11,7 @@ entity TRAFFIC is
 end TRAFFIC;
 
 architecture Light of TRAFFIC is
-  type state_type is (GA, GAGC, WA, WAWC, YA, RA, GB, GBGD, WB, WBWD, YB, RB, GC, GCGA, WC, WCWA, YC, RC, GD, GDGB, WD, WDWB, YD, RD, blink, GAYB);
+  type state_type is (GDA_GDC, WA, WAWC, YA, RA, GDA_GRA, GDB_GDD, GDB_GRB, WB, WBWD, YB, RB, GDC_GRC, GDD_GRD, WC, WCWA, YC, RC, GD, GDGB, WD, WDWB, YD, RD, blink, GAYB);
   signal state: state_type;
   signal s, m: integer range 0 to 59 := 0;
   signal h: integer range 0 to 23 := 4;
@@ -22,7 +22,7 @@ begin
   begin
     if reset = '1' then
       clock <= 1;
-      state <= GAGC;
+      state <= GDA_GDC;
       A <= "1000";
       B <= "0001";
       C <= "1000";
@@ -47,7 +47,7 @@ begin
         end if;
 
        
-        if state = GAGC then
+        if state = GDA_GDC then
           A <= "1000";
           B <= "0001";
           C <= "1000";
