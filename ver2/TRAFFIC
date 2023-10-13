@@ -1,0 +1,163 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_arith.all;
+use ieee.std_logic_unsigned.all;
+
+entity TRAFFIC is
+  Port (
+    reset, clk: in std_logic;
+    A, B, C, D: out std_logic_vector(3 downto 0)
+  );
+end TRAFFIC;
+
+architecture Light of TRAFFIC is
+  type state_type is (GDA_GDC, WA, WAWC, YA, RA, GDA_GRA, GDB_GDD, GDB_GRB, WB, WBWD, YB, RB, GDC_GRC, GDD_GRD, WC, WCWA, YC, RC, GD, GDGB, WD, WDWB, YD, RD, GDC_GDA, blink, GAYB);
+  signal state: state_type;
+  signal s, m: integer range 0 to 59 := 0;
+  signal h: integer range 0 to 23 := 4;
+  signal clock: integer := 0;
+
+begin
+  process (clk, reset)
+  begin
+    if reset = '1' then
+      clock <= 1;
+      state <= GDA_GDC;
+      A <= "1000";
+      B <= "0001";
+      C <= "1000";
+      D <= "0001";
+    else
+      if rising_edge(clk) then
+        s <= s + 1;
+        clock <= clock + 1;
+
+        if s = 59 then
+          s <= 0;
+          m <= m + 1;
+
+          if m = 59 then
+            h <= h + 1;
+            m <= 0;
+
+            if h = 23 then
+              h <= 0;
+            end if;
+          end if;
+        end if;
+
+       
+        if state = GDA_GDC then --Case1
+          A <= "1000";
+          B <= "0001";
+          C <= "1000";
+          D <= "0001";
+          if clock = 3 then
+            state <= WC;
+          end if;
+        elsif state = WC then
+          A <= "1000";
+          B <= "0001";
+          C <= "0000";
+          D <= "0001";
+          if clock = 4 then
+            state <= GAYB;
+          end if;
+        elsif state = GAYB then
+          A <= "1000";
+          B <= "0001";
+          C <= "0010";
+          D <= "0001";
+          if clock = 8 then
+            state <= WAWC;
+          end if;
+        elsif state = WAWC then
+          A <= "0000";
+          B <= "0001";
+          C <= "0000";
+          D <= "0001";
+          if clock = 9 then
+            state <= YA;
+          end if;
+        elsif state = YA then
+			A <= "1100";
+			B <= "0001";
+			C <= "0001";
+			D <= "0001";
+			if clock = 16 then
+				state <= GDA_GRA;
+			end if;
+		  elsif state = GDA_GRA then --Case2
+			A <= "1100";
+			B <= "0001";
+			C <= "0001";
+			D <= "0001";
+			if clock = 18 then 
+				state <= GDB_GDD;
+			end if;
+
+        elsif state = GDB_GDD then --Case3
+          A <= "0001";
+          B <= "1000";
+          C <= "0001";
+          D <= "1000";
+          if clock = 22 then
+            state <= GDB_GRB;
+          end if;
+			 
+			 elsif state = GDB_GRB then --Case4
+				A <= "0001";
+				B <= "1100";
+				C <= "0001";
+				D <= "0001";
+			 if clock = 24 then
+				state <= GDC_GDA;
+			end if;
+			
+			elsif state = GDC_GDA then --Case5
+				A <= "1000";
+				B <= "0001";
+				C <= "1000";
+				D <= "0001";
+			if clock = 26 then
+				state <= GDC_GRC;
+			end if;
+			
+			elsif state = GDC_GRC then --Case6
+				A <= "0001";
+				B <= "0001";
+				C <= "1100";
+				D <= "0001";
+			if clock = 28 then 
+				state <= GDB_GDD;
+			end if;
+			
+			elsif state = GDB_GDD then --Case7
+				A <= "0001";
+				B <= "1000";
+				C <= "0001";
+				D <= "1000";
+			if clock = 30 then
+				state <= GDD_GRD;
+			end if;
+				
+			elsif state = GDD_GRD then --Case8
+				A <= "0001";
+				B <= "0001";
+				C <= "0001";
+				D <= "1100";
+			if clock = 32 then
+				state <= GDA_GDC;
+			end if;
+			
+        else
+          A <= "0001";
+          B <= "0001";
+          C <= "0001";
+          D <= "0001";
+          state <= GDC_GDA; 
+        end if;
+      end if;
+    end if;
+  end process;
+end Light;
