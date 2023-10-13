@@ -1,121 +1,108 @@
-Library ieee;
-use std_logic_1164.all;
-use std_logic_arith.all;
-use std_logic_unsigned.all;
- 
-Entity tafficjam is
-   Port(reset,clk :in std_logic ;
-      A,B,C,D :out std_logic_vector(3 downto 0));
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_arith.all;
+use ieee.std_logic_unsigned.all;
 
-END tafficjam;
-Architecture Light of tafficjam is
-type state_type is(GA,YA,RA,GB,G1B,YB,RB,GC,G1C,YC,RC,GD,G1D,YD,RD,blink,W);
-type opposive is(GA,YA,RA,GB,G1B,YB,RB,GC,G1C,YC,RC,GD,G1D,YD,RD,blink,W);
-    Signal state: state_type;
-  Signal oppo: opposive;
-    Signal s,m :integer range 0 to 59:=0;
-    Signal h :integer range 0 to 23:=4;
-    Signal clock :integer :=0;
+entity TRAFFIC is
+  Port (
+    reset, clk: in std_logic;
+    A, B, C, D: out std_logic_vector(3 downto 0)
+  );
+end TRAFFIC;
+
+architecture Light of TRAFFIC is
+  type state_type is (GA, GAGC, WA, WAWC, YA, RA, GB, GBGD, WB, WBWD, YB, RB, GC, GCGA, WC, WCWA, YC, RC, GD, GDGB, WD, WDWB, YD, RD, blink, GAYB);
+  signal state: state_type;
+  signal s, m: integer range 0 to 59 := 0;
+  signal h: integer range 0 to 23 := 4;
+  signal clock: integer := 0;
+
 begin
-process(clk,reset)
-       begin
-       if(clk'event and clk ='1')then
-          s <= sec + 1;
+  process (clk, reset)
+  begin
+    if reset = '1' then
+      clock <= 1;
+      state <= GAGC;
+      A <= "1000";
+      B <= "0001";
+      C <= "1000";
+      D <= "0001";
+    else
+      if rising_edge(clk) then
+        s <= s + 1;
         clock <= clock + 1;
-    count <= count + 1;
-     if(s = 59)then
+
+        if s = 59 then
           s <= 0;
-        m <= m + 1;
-     if(m = 59) then
-          h <= h + 1;
-        m <= 0;
-     if(h = 23)then
-          h <= 0;
-     end if;
-       end if;
-       end if;
-              if (h >= 4 and h < 22)then
-             clock <= 1;
-       state <= GA;
-       A <= "1000";
-       B <= "0001";
-       C <= "0001";
-       D <= "0001";
-       oppo <= GC;
-       A <= "1000";
-       B <= "0001";
-       C <= "0001";
-       D <= "0001";
-      else
-                 A <= "0001";
-       B <= "0001";
-       C <= "0001";
-       D <= "0001";
-               case state is
-                 when GA =>
-       A <= "1000";
-       B <= "0001";
-       C <= "0001";
-       D <= "0001";
-       when GC =>
-       A <= "1000";
-       B <= "0001";
-       C <= "0001";
-       D <= "0001";
-       if clock = 5 then
-          clock <= clock;
-        oppo <= YC;
-       end if;
-              when YC =>
-              A <= "0001";
-              B <= "0001";
-              C <= "0010";
-              D <= "0001";
-          if clock = 8 then
-          clock <= clock
-            oppo <= W;
+          m <= m + 1;
+
+          if m = 59 then
+            h <= h + 1;
+            m <= 0;
+
+            if h = 23 then
+              h <= 0;
+            end if;
+          end if;
         end if;
-               when W =>
-           if(clock = 9) then 
-           A <= "0000";
-                     B <= "0000";
-                     C <= "0000";
-                     D <= "0000";
-           end if;
-           if(clock = 10) then
-           A <= "0010";
-                     B <= "0010";
-                     C <= "0010";
-                     D <= "0010";
-           end if;
-           oppo <= RC;
-                  when RC =>
-                                A <= "0001";
-                            B <= "0001";
-                            C <= "0001";
-                            D <= "0001";           
-       if clock = 8 then
-          clock <= clock;
-        state <= YA;
-       when YA =>
-       if(clock = 9) then 
-                 A <= "0000";
-       B <= "0000";
-       C <= "0000";
-       D <= "0000"; 
-       end if;
-       if(clock = 10) then
-       A <= "0010";
-       B <= "0010";
-       C <= "0010";
-       D <= "0010";
-       end if;
-       if clock = 10 then
-          clock <= 1;
-        state <= GB;
-       when GB =>
-         A <= "1100";
-       B <= "1100";
-       C <= "0000";
-       D <= "0000";
-       if clock = 10 then
+
+       
+        if state = GAGC then
+          A <= "1000";
+          B <= "0001";
+          C <= "1000";
+          D <= "0001";
+          if clock = 3 then
+            state <= WC;
+          end if;
+        elsif state = WC then
+          A <= "1000";
+          B <= "0001";
+          C <= "0000";
+          D <= "0001";
+          if clock = 4 then
+            state <= GAYB;
+          end if;
+        elsif state = GAYB then
+          A <= "1000";
+          B <= "0001";
+          C <= "0010";
+          D <= "0001";
+          if clock = 8 then
+            state <= WAWC;
+          end if;
+        elsif state = WAWC then
+          A <= "0000";
+          B <= "0001";
+          C <= "0000";
+          D <= "0001";
+          if clock = 9 then
+            state <= GA;
+          end if;
+        elsif state = YA then
+          A <= "1100";
+          B <= "0001";
+          C <= "0001";
+          D <= "0001";
+          if clock = 16 then
+            state <= GBGD;
+          end if;
+        elsif state = GBGD then
+          A <= "0001";
+          B <= "1000";
+          C <= "0001";
+          D <= "1000";
+          if clock = 20 then
+            state <= GAGC;
+          end if;
+        else
+          A <= "0001";
+          B <= "0001";
+          C <= "0001";
+          D <= "0001";
+          state <= GAGC; 
+        end if;
+      end if;
+    end if;
+  end process;
+end Light;
