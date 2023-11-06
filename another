@@ -1,0 +1,91 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity TRAFFIC is
+    Port (
+        reset, clk: in std_logic; 
+        A, B, C, D: out std_logic_vector(3 downto 0); -- Each vector represents a traffic light with 4 states: 1000 for green, 0100 for yellow, 0010 for red, 0001 for off
+        current_time: out std_logic_vector(4 downto 0) -- 5 bits to represent minutes (up to 31) for the display
+    );
+end TRAFFIC;
+
+architecture Light of TRAFFIC is
+    type state_type is (
+        INIT, -- Initial state
+        GDA_GDC, GDA_YC, GDA_GRA, WA_WC, WA, YA, RA, -- States for traffic box 1
+        GDB_GDD, GDB_YD, GDB_GRB, WB_WD, WB, YB, RB, -- States for traffic box 2
+        GDC_GDA, GDC_YA, GDC_GRC, WC_WA, WC, YC, RC, -- States for traffic box 3
+        GDD_GDB, GDD_YB, GDD_GRD, WD_WB, WD, YD, RD, -- States for traffic box 4
+        FLASHING -- State for all flashing yellow
+    );
+    
+    signal state: state_type := INIT;
+    signal timer: natural := 0; -- Timer for state duration
+	 signal second: integer range 0 to 60 := 0;
+    signal minutes: integer range 0 to 60 := 0; -- Total minutes since midnight (0-1440)
+    signal hour: integer range 0 to 23 := 0;
+    -- Convert global minutes to 5-bit representation for the display
+    signal display_time: std_logic_vector(4 downto 0) := (others => '0');
+    
+begin
+    -- Timekeeping and state transition process
+    process (clk, reset)
+    begin
+        if reset = '1' then
+            -- Reset logic
+            state <= INIT;
+            timer <= 0;
+            global_minutes <= 0;
+            display_time <= (others => '0');
+            A <= "0001"; -- Turn off all lights
+            B <= "0001";
+            C <= "0001";
+            D <= "0001";
+        elsif rising_edge(clk) then
+            -- Timer logic
+            second <= second + 1;
+            timer <= timer + 1;
+            -- Update the global_minutes every 60 seconds
+            if second = 60 then
+				    second <= 0;
+                minutes <= minutes + 1;
+					 
+               if minutes = 60 then
+                    minute <= 0;					
+                -- Update the display time every minute
+                display_time <= std_logic_vector(to_unsigned(global_minutes mod 32, 5));
+                
+                -- Check if it's 22:00 to switch to flashing yellow
+                 if h >= 22 and h < 4 then -- 22:00 in minutes
+					     timer = 0;
+					     case state is
+                    when FLASHING =>
+						       A <= "0000";
+                         B <= "0000";
+                         C <= "0000";
+                         D <= "0000";
+								 if second = 1 then
+							        state <= FLASHING;
+								 end if;
+						  when FLASHING =>
+				             A <= "0010";
+                         B <= "0010";
+                         C <= "0010";
+                         D <= "0010";
+					          if second = 2 then
+							        state <= FLASHING;
+									  timer = 0;
+								 end if;			 
+						  end case;  
+					elsif h >= 4 and h < 22 then 
+						case state is
+						    when GDA_GDC =>
+							      A <= "0000";
+                           B <= "0000";
+                           C <= "0000";
+                           D <= "0000";    
+						      
+           end if;
+				end if; 
+      end if;
